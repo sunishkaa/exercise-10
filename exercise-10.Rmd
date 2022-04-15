@@ -1,0 +1,101 @@
+---
+title: "exercise-10"
+author: "Sunishka"
+date: "4/15/2022"
+output: html_document
+---
+Using the {tidyverse} read_csv() function, load the “KamilarAndCooperData.csv” dataset from this URL as a “tibble” named d.
+
+```{r}
+library(tidyverse)
+f = "https://raw.githubusercontent.com/difiore/ada-2022-datasets/main/KamilarAndCooperData.csv"
+d = read_csv(f, col_names = TRUE)
+```
+
+From this dataset, plot lifespan (scored as MaxLongevity_m in the dataset) versus female body mass (scored as Body_mass_female_mean). Is the relationship linear? If not, how might you transform one or both variable to more closely approximate a linear relationship?
+
+```{r}
+ggplot(d, aes(x= MaxLongevity_m, y = Body_mass_female_mean))+
+  geom_point()
+
+```
+
+The relationship looks linear but we may need to log transform the y variable. 
+
+Run linear models of lifespan ~ female body mass, lifespan ~ log(female body mass), and log(lifespan) ~ log(female body mass)
+
+```{r}
+
+m1 = lm(MaxLongevity_m ~ Body_mass_female_mean, data=d)
+m2 = lm(MaxLongevity_m ~ log(Body_mass_female_mean), data=d)
+m3 = lm(log(MaxLongevity_m) ~ log(Body_mass_female_mean), data=d)
+m1_summ = summary(m1)
+
+```
+
+Generate residuals for all three linear models, plot them by hand in relation to the corresponding explanatory variable, and make histograms of the residuals. Do they appear to be normally distributed?
+
+```{r}
+
+par(mfrow = c(3,2))
+#for m1
+e1 = (m1$residuals)
+x1 = (m1$model$Body_mass_female_mean)
+plot(x1, e1)
+hist(e1, xlim = c(-4 * sd(e1), 4 * sd(e1)))
+ 
+#for m2
+e2 = (m2$residuals)
+x2 = (m2$model$`log(Body_mass_female_mean)`)
+plot(x2, e2)
+hist(e2, xlim = c(-4 * sd(e2), 4 * sd(e2)))         
+
+#for m3
+e3 = (m3$residuals)
+x3 = (m3$model$`log(Body_mass_female_mean)`)
+plot(x3, e3)
+hist(e3, xlim = c(-4 * sd(e3), 4 * sd(e3)))
+
+```
+
+From the histograms, it is hard to tell if the first model is normal, but the other two look normal. 
+
+Generate QQ plots for all three linear models. Do they appear to be normally distributed? Based on visual inspection of the QQ plots, do the residual appear to deviate from being normally distributed?
+
+```{r}
+par(mfrow=c(1,3))
+qqnorm(m1$residuals)
+qqline(m1$residuals, col = "blue")
+qqnorm(m2$residuals)
+qqline(m2$residuals, col = "blue")
+qqnorm(m3$residuals)
+qqline(m3$residuals, col = "blue")
+
+```
+From the QQ plots, they appear to be normall distributed. There is deviance from that in the first model. 
+
+Run the plot() command for all three models and visually inspect the resultant plots. What do the plots suggest about whether the assumptions for regression are met for any of these models?
+
+```{r}
+
+par(mfrow=c(2,2))
+plot(m1)
+par(mfrow=c(2,2))
+plot(m2)
+par(mfrow=c(2,2))
+plot(m3)
+
+```
+
+The first model does not seem to fit assumptions for regression, but the other two do.
+
+Run Shapiro-Wilks tests (e.g., using the function shapiro.test() on the residuals for all three models. What do the results of these test suggest about the whether your data meet the assumptions for using simple linear regression?
+
+```{r}
+s1 = shapiro.test(m1$residuals)
+s2 = shapiro.test(m2$residuals)
+s3 = shapiro.test(m3$residuals)
+
+```
+
+Model 1 has a very small p value, model 2 is also small but bigger than model 1's. Model 3 has the biggest p value, thus it is the best and meets all the assumptions for regression. 
